@@ -38,3 +38,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     client.send(package)
                     package = f.read(1024000)
                 f.close()
+                print("Fisnished sending the file")
+                final_confirmation = client.recv(1024)
+                print("The client finished writing the file with", repr(final_confirmation))
+                client.close()
+
+
+def write_in_log(message):
+    return
