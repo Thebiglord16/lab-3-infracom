@@ -26,20 +26,24 @@ class ClientThread(threading.Thread):
             route = './media/receivedFlie' + self.idnum + '.mp4'
             f = open(route, 'wb')
             p_count = 2
+            previous_progress = 0
             while True:
                 f.write(data)
                 downloaded_size = os.path.getsize(route)
-                print("receiving package, progress " + str((downloaded_size / ac_size) * 100) + "%")
+                progress = downloaded_size / ac_size
+                print("receiving package, progress " + str(progress * 100) + "%")
                 if downloaded_size / ac_size == 1.0:
+                    break
+                if previous_progress == progress:
                     break
                 try:
                     data = s.recv(1024000)
                     print("packages received: ", p_count)
                     p_count += 1
+                    previous_progress = progress
                 except Exception as e:
                     print(str(e))
                     break
-            print(os.path.getsize(route) == ac_size)
             f.close()
             file_hash = hashlib.md5()
             with open(route, 'rb') as file:
