@@ -1,11 +1,28 @@
 from socket import *
 import socket
+import hashlib
+import logging
+import logging.handlers
 import time
+import os
+
+LOG_FILENAME = 'UDPserverLog.log'
+logger = logging.getLogger('UDPserverLogger')
+logger.setLevel(logging.INFO)
+handler = logging.handlers.RotatingFileHandler(LOG_FILENAME, mode='w', backupCount=50)
+logging_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setLevel(logging.INFO)
+handler.setFormatter(logging_format)
+logger.addHandler(handler)
+logging.handlers.RotatingFileHandler.doRollover(handler)
+
 
 # Se seclaran el host el puerto de TCP y la cantidad de clientes esperados
-host = "127.0.0.1"
+route = "./media/bigFile.mp4"
+host = input("enter the host address the server will be running on")
+print("we will be using the port 65432,and the ports from 20001 to 2000XX where XX is equal to 1+the number of request")
+quantity = int(input("enter the amount of request the server will be waiting for"))
 portTCP = 65432
-quantity = 25
 portsUDP = []
 # Se realiza una conexion TCP para asegurarse que todos los clientes han llegado y estan listos a recibir
 # en este mismo proceso se obtienen los puertos por los que los clientes esperaran la conexion UDP
@@ -27,6 +44,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         portsUDP.append(str(data))
     s.close()
 # Se selecciona cada puerto individual y se comienza la transmision de datos
+logger.info("Starting the process of sending a file to the connected clients")
+logger.info("Sending file: " + route + " with size: " + str(os.path.getsize("multimedia2.mp4")) + " bytes")
 for puerto in portsUDP:
 
     time.sleep(2)
@@ -34,6 +53,7 @@ for puerto in portsUDP:
     portU = portU.replace("'", "")
     numero = puerto.split(":")[0]
     numero = numero.replace("'", "")
+    logger.info("sending file to client: " + numero)
     bufferSize = 1024
     with socket.socket(AF_INET, SOCK_DGRAM) as n:
 
@@ -44,9 +64,13 @@ for puerto in portsUDP:
 
         f = open("multimedia2.mp4", "rb")
         data = f.read(bufferSize)
+        start = time.time()
         while data:
             if n.sendto(data, addr):
                 print("Enviando ...")
                 data = f.read(bufferSize)
+        end = time.time()
         n.close()
         f.close()
+    logger.info("sent file to client " + str(numero) + " in " + str(round(end - start, 4)))
+
