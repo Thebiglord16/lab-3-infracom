@@ -47,6 +47,6 @@ for puerto in portsUDP:
         while data:
             if n.sendto(data, addr):
                 print("Enviando ...")
-                data = f.read(buf)
+                data = f.read(bufferSize)
         n.close()
         f.close()
