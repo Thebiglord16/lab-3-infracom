@@ -12,6 +12,7 @@ class ClientThread(threading.Thread):
     idnum = "0"
     portUDP = 0
     hashEsperado = ""
+    tamanioFile = 0
 
     def run(self):
         host = "127.0.0.1"
@@ -24,18 +25,28 @@ class ClientThread(threading.Thread):
             print(data)
             s.send(str.encode(self.idnum + ":" + str(self.portUDP)))
             data = s.recv(1024)
-            self.hashEsperado = str(data)
+            self.hashEsperado = str(data).split(":::")[0]
+            self.tamanioFile = str(data).split(":::")[1]
+            self.tamanioFile = self.tamanioFile.replace("'", "")
             self.hashEsperado = self.hashEsperado.replace("'", "")
             self.hashEsperado = self.hashEsperado[1:len(self.hashEsperado)]
         s.close()
 
         # Se comienza a recibir el archivo por UDP
         with socket.socket(AF_INET, SOCK_DGRAM) as n:
-            bufferSize = 1024
+            self.tamanioFile = int(self.tamanioFile)
+            if self.tamanioFile < 105000000:
+                bufferSize = 40960
+            else:
+                bufferSize = 10240
             n.bind((host, self.portUDP))
             addr = (host, self.portUDP)
             data, addr = n.recvfrom(bufferSize)
-            print("Se recibio el archivo: ", data.strip())
+            nombre = data.strip()
+            nombre = str(nombre)
+            nombre = nombre.replace("b", "")
+            nombre = nombre.replace("'", "")
+            print("Se recibio el archivo: ", nombre)
             f = open(data.strip(), 'wb')
 
             data, addr = n.recvfrom(bufferSize)
@@ -48,7 +59,7 @@ class ClientThread(threading.Thread):
                 f.close()
                 print("Se termino de descargar el archivo")
             hasher = hashlib.md5()
-            with open('multimediab' + str(self.idnum) + '.mp4', 'rb') as afile:
+            with open(nombre, 'rb') as afile:
                 buf = afile.read(1024)
                 while len(buf) > 0:
                     hasher.update(buf)
