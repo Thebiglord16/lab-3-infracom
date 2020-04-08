@@ -47,9 +47,9 @@ def stream(lista,con):
                         con[0]=False
                         break
     cv2.destroyWindow('frame')
-
+p=easygui.integerbox("En que puerto ",'Puerto',60380,None,None)
 udpCS= socket.socket(family=socket.AF_INET,type=socket.SOCK_DGRAM)
-udpCS.bind(('127.0.0.1', 60380))
+udpCS.bind(('127.0.0.1', p))
 bufferSize=310000
 host = '127.0.0.1'
 while True:
