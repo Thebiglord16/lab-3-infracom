@@ -16,24 +16,33 @@ handler.setFormatter(logging_format)
 logger.addHandler(handler)
 logging.handlers.RotatingFileHandler.doRollover(handler)
 
-
 # Se seclaran el host el puerto de TCP y la cantidad de clientes esperados
-route = "./media/bigFile.mp4"
+route = ""
+archivo = input("write 1 to select the little file or 2 to select the big file")
+bufferUTP = 1024
+if archivo == "1":
+    route = "./archivos/multimedia2.mp4"
+    bufferUTP = 1024
+else:
+    route = "./archivos/multimedia.mp4"
+    bufferUTP = 64000
+cantidadEnviables = int(os.path.getsize(route) / bufferUTP)
+print(route)
+
 host = input("enter the host address the server will be running on")
 print("we will be using the port 65432,and the ports from 20001 to 200XX where XX is equal to 1+the number of request")
 quantity = int(input("enter the amount of request the server will be waiting for"))
 portTCP = 65432
 portsUDP = []
 
-
 hasher = hashlib.md5()
-with open('multimedia2.mp4', 'rb') as afile:
+with open(route, 'rb') as afile:
     buf = afile.read(1024)
     while len(buf) > 0:
         hasher.update(buf)
         buf = afile.read(1024)
-hashEsperado= hasher.hexdigest()
-print(hashEsperado)
+hashEsperado = hasher.hexdigest()
+
 # Se realiza una conexion TCP para asegurarse que todos los clientes han llegado y estan listos a recibir
 # en este mismo proceso se obtienen los puertos por los que los clientes esperaran la conexion UDP
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -53,10 +62,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         data = conn.recv(1024)
         portsUDP.append(str(data))
         conn.send(bytes(str(hashEsperado), encoding='utf8'))
+
     s.close()
 # Se selecciona cada puerto individual y se comienza la transmision de datos
 logger.info("Starting the process of sending a file to the connected clients")
-logger.info("Sending file: " + route + " with size: " + str(os.path.getsize("multimedia2.mp4")) + " bytes")
+logger.info("Sending file: " + route + " with size: " + str(os.path.getsize(route)) + " bytes")
 for puerto in portsUDP:
 
     time.sleep(2)
@@ -66,6 +76,7 @@ for puerto in portsUDP:
     numero = numero.replace("'", "")
     logger.info("sending file to client: " + numero)
     bufferSize = 1024
+
     with socket.socket(AF_INET, SOCK_DGRAM) as n:
 
         addr = (host, int(portU))
@@ -73,7 +84,7 @@ for puerto in portsUDP:
         enviableBytes = str.encode(file_name)
         n.sendto(enviableBytes, addr)
 
-        f = open("multimedia2.mp4", "rb")
+        f = open(route, "rb")
         data = f.read(bufferSize)
         start = time.time()
         while data:
@@ -81,7 +92,8 @@ for puerto in portsUDP:
                 print("Enviando ...")
                 data = f.read(bufferSize)
         end = time.time()
+        resp = n.recvfrom(1024)
+        logger.info("Was the Hash test successful: " + str(resp))
         n.close()
         f.close()
     logger.info("sent file to client " + str(numero) + " in " + str(round(end - start, 4)))
-

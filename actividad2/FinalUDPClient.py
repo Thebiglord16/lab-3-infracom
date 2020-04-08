@@ -11,7 +11,8 @@ portUDP = 20000
 class ClientThread(threading.Thread):
     idnum = "0"
     portUDP = 0
-    hashEsperado=""
+    hashEsperado = ""
+
     def run(self):
         host = "127.0.0.1"
         portTCP = 65432
@@ -23,7 +24,9 @@ class ClientThread(threading.Thread):
             print(data)
             s.send(str.encode(self.idnum + ":" + str(self.portUDP)))
             data = s.recv(1024)
-            self.hashEsperado=data
+            self.hashEsperado = str(data)
+            self.hashEsperado = self.hashEsperado.replace("'", "")
+            self.hashEsperado = self.hashEsperado[1:len(self.hashEsperado)]
         s.close()
 
         # Se comienza a recibir el archivo por UDP
@@ -43,16 +46,17 @@ class ClientThread(threading.Thread):
                     data, addr = n.recvfrom(bufferSize)
             except timeout:
                 f.close()
-                n.close()
                 print("Se termino de descargar el archivo")
             hasher = hashlib.md5()
-            with open('multimediab'+str(self.idnum)+'.mp4', 'rb') as afile:
+            with open('multimediab' + str(self.idnum) + '.mp4', 'rb') as afile:
                 buf = afile.read(1024)
                 while len(buf) > 0:
                     hasher.update(buf)
                     buf = afile.read(1024)
             hashRecibido = hasher.hexdigest()
-            
+            correcto = hashRecibido == self.hashEsperado
+            n.sendto(str.encode(str(correcto)), addr)
+            n.close()
 
 
 client_num = 25
