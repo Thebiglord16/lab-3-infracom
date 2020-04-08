@@ -20,10 +20,20 @@ logging.handlers.RotatingFileHandler.doRollover(handler)
 # Se seclaran el host el puerto de TCP y la cantidad de clientes esperados
 route = "./media/bigFile.mp4"
 host = input("enter the host address the server will be running on")
-print("we will be using the port 65432,and the ports from 20001 to 2000XX where XX is equal to 1+the number of request")
+print("we will be using the port 65432,and the ports from 20001 to 200XX where XX is equal to 1+the number of request")
 quantity = int(input("enter the amount of request the server will be waiting for"))
 portTCP = 65432
 portsUDP = []
+
+
+hasher = hashlib.md5()
+with open('multimedia2.mp4', 'rb') as afile:
+    buf = afile.read(1024)
+    while len(buf) > 0:
+        hasher.update(buf)
+        buf = afile.read(1024)
+hashEsperado= hasher.hexdigest()
+print(hashEsperado)
 # Se realiza una conexion TCP para asegurarse que todos los clientes han llegado y estan listos a recibir
 # en este mismo proceso se obtienen los puertos por los que los clientes esperaran la conexion UDP
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -42,6 +52,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             conn.send(bytes(message, encoding='utf8'))
         data = conn.recv(1024)
         portsUDP.append(str(data))
+        conn.send(bytes(str(hashEsperado), encoding='utf8'))
     s.close()
 # Se selecciona cada puerto individual y se comienza la transmision de datos
 logger.info("Starting the process of sending a file to the connected clients")
