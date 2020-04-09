@@ -16,25 +16,20 @@ handler.setFormatter(logging_format)
 logger.addHandler(handler)
 logging.handlers.RotatingFileHandler.doRollover(handler)
 
-# Se seclaran el host el puerto de TCP y la cantidad de clientes esperados
-route = ""
-archivo = input("write 1 to select the little file or 2 to select the big file")
+# Se seclaran el host el puerto de TCP, el archivo a enviar, el tamanio del buffer y la cantidad de clientes esperados
 bufferUDP = 1024
-if archivo == "1":
-    route = "./archivos/archivo.w3speech"
-    bufferUDP = 40960
-    nombre = "archivo"
-    ext = ".w3speech"
-else:
-    route = "./archivos/multimedia.mp4"
-    bufferUDP = 10240
-    nombre = "multimedia"
-    ext = ".mp4"
+nombre = input("enter the name of the file without the extension")
+ext = input("enter the extension of the file")
+route = nombre + ext
 tamanio = int(os.path.getsize(route))
-cantidadEnviables= int(tamanio/bufferUDP)+1
+cantidadEnviables = int(tamanio / bufferUDP) + 1
 
 print(route)
 
+if tamanio < 105000000:
+    bufferUDP = 40960
+else:
+    bufferUDP = 10240
 host = input("enter the host address the server will be running on")
 print("we will be using the port 65432,and the ports from 20001 to 200XX where XX is equal to 1+the number of request")
 quantity = int(input("enter the amount of request the server will be waiting for"))
@@ -67,13 +62,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             conn.send(bytes(message, encoding='utf8'))
         data = conn.recv(1024)
         portsUDP.append(str(data))
-        conn.send(bytes(str(hashEsperado+":::"+str(tamanio)), encoding='utf8'))
+        conn.send(bytes(str(hashEsperado + ":::" + str(tamanio)), encoding='utf8'))
 
     s.close()
 # Se selecciona cada puerto individual y se comienza la transmision de datos
 logger.info("Starting the process of sending a file to the connected clients")
 logger.info("Sending file: " + route + " with size: " + str(os.path.getsize(route)) + " bytes")
-logger.info("We will send "+ str(cantidadEnviables)+" packages of " + str(bufferUDP)+" bytes")
+logger.info("We will send " + str(cantidadEnviables) + " packages of " + str(bufferUDP) + " bytes")
 for puerto in portsUDP:
 
     time.sleep(2)
