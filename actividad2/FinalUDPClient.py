@@ -7,15 +7,18 @@ import threading
 # Puerto a partir del cual se comienzan las transmisiones UDP
 portUDP = 20000
 
+host = input("enter the host address to make the connection to the server ")
+
 
 class ClientThread(threading.Thread):
     idnum = "0"
+    host = ""
     portUDP = 0
     hashEsperado = ""
     tamanioFile = 0
 
     def run(self):
-        host = "127.0.0.1"
+
         portTCP = 65432
         # Se comienza la transmision TCP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -75,6 +78,7 @@ clients = []
 
 while len(clients) < client_num:
     client = ClientThread()
+    client.host=host
     client.idnum = str(len(clients))
     portUDP = portUDP + 1
     client.portUDP = portUDP
